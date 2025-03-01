@@ -5,7 +5,7 @@ export default function LaunchScreen({ navigation }) {
   speak("Welcome to EchoLingo. Press anywhere to continue.");
 
   return ( 
-    <TouchableWithoutFeedback onPress={() => navigate(navigation, "Home")}>
+    <TouchableWithoutFeedback onPress={() => navigate(navigation, "Login")}>
       <View style={styles.fullScreen}>
         <ImageBackground 
           source={require('../assets/launch-bg.png')} 
@@ -50,3 +50,4 @@ const styles = StyleSheet.create({ // The launch screen uses seperate styles
     height: '100%',
   },
 });
+
