@@ -5,6 +5,7 @@ import { SettingsProvider } from './settings.js';
 
 // IMPORT ALL SCREENS HERE
 import LaunchScreen from './screens/LaunchScreen';
+import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import LearnScreen from './screens/LearnScreen';
 import PracticeScreen from './screens/PracticeScreen';
@@ -13,7 +14,6 @@ import PreferencesScreen from './screens/PreferencesScreen';
 import VisualSettingsScreen from './screens/VisualSettingsScreen';
 import AudioSettingsScreen from './screens/AudioSettingsScreen';
 import NavigateScreen from './screens/NavigateScreen';
-import LoginScreen from './screens/LoginScreen';
 
 const Stack = createStackNavigator();
 
