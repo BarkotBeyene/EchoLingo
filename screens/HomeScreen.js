@@ -1,10 +1,16 @@
 import { Text, View, Image, SafeAreaView, TouchableOpacity } from 'react-native';
-import styles from '../styles.js';
+import { useEffect, useContext } from 'react';
+import { Settings } from '../settings.js';
+import createStyles from '../styles.js';
 import { navigate, speak } from '../functions.js';
 
 export default function HomeScreen({ navigation }) {
+  const { fontSize, isGreyscale, isAutoRead } = useContext(Settings);
+
+  createStyles(fontSize, isGreyscale);
+
   message = "Now viewing: Home. Press top left to visit learn. Press top right to visit practice. Press bottom left to visit community. Press bottom right to visit preferences. Press bottom banner to visit navigate. Press top right banner to repeat this message.";
-  speak(message);
+  useEffect(() => { if (isAutoRead) {speak(message);} }, []);
 
   return (
     <SafeAreaView style={styles.container}>

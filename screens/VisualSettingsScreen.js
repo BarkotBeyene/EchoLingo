@@ -4,36 +4,38 @@ import { Settings } from '../settings.js';
 import createStyles from '../styles.js';
 import { navigate, speak } from '../functions.js';
 
-export default function PreferencesScreen({ navigation }) {
-  const { fontSize, isGreyscale, isAutoRead } = useContext(Settings);
+export default function VisualSettingsScreen({ navigation }) {
+  const { fontSize, isGreyscale, isAutoRead, toggleFontSize, toggleGreyscale } = useContext(Settings);
 
   createStyles(fontSize, isGreyscale);
   
-  message = "Now viewing: Preferences. Press top left to edit visual settings. Press top right to edit audio settings. Press bottom banner to return home. Press top right banner to repeat this message.";
+  message = "Now viewing: Visual Settings. Press top left to toggle font size. Press top right to toggle greyscale mode. Press bottom banner to return home. Press top right banner to repeat this message.";
   useEffect(() => { if (isAutoRead) {speak(message);} }, []);
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Title Banner */}
       <View style={styles.topBanner}>
-        <Text style={styles.titleText}>Preferences</Text>
+        <Text style={styles.titleText}>Visual Settings</Text>
 
         <TouchableOpacity style={styles.topRightBannerButton} onPress={() => speak(message)}>
           <Image source={require('../assets/volume.png')} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.topLeftBannerButton} onPress={() => navigate(navigation, "Home")}>
+        <TouchableOpacity style={styles.topLeftBannerButton} onPress={() => navigate(navigation, "Preferences")}>
           <Image source={require('../assets/back.png')} />
         </TouchableOpacity>
       </View>
 
       {/* Main Buttons */}
       <View style={styles.buttonGrid}>
-        <TouchableOpacity style={styles.gridButton4} onPress={() => navigate(navigation, "Visual Settings")}>
-          <Text style={styles.buttonText}>Visual Settings</Text>
+        <TouchableOpacity style={styles.gridButton4} onPress={toggleFontSize}>
+          <Text style={styles.buttonText}>Interface Font Size{'\n'}</Text>
+          <Text style={styles.buttonText}>{fontSize}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.gridButton4} onPress={() => navigate(navigation, "Audio Settings")}>
-          <Text style={styles.buttonText}>Audio Settings</Text>
+        <TouchableOpacity style={styles.gridButton4} onPress={toggleGreyscale}>
+          <Text style={styles.buttonText}>Greyscale Mode{'\n'}</Text>
+          <Text style={styles.buttonText}>{isGreyscale ? "On" : "Off"}</Text>
         </TouchableOpacity>
       </View>
 
@@ -44,4 +46,3 @@ export default function PreferencesScreen({ navigation }) {
     </SafeAreaView>
   );
 }
-

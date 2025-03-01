@@ -1,8 +1,9 @@
 import { StyleSheet, Text, View, Image, SafeAreaView, TouchableWithoutFeedback, ImageBackground } from 'react-native'; 
+import { useEffect } from 'react';
 import { navigate, speak } from '../functions.js';
 
 export default function LaunchScreen({ navigation }) {
-  speak("Welcome to EchoLingo. Press anywhere to continue.");
+  useEffect(() => {speak("Welcome to EchoLingo. Press anywhere to continue.");}, []);
 
   return ( 
     <TouchableWithoutFeedback onPress={() => navigate(navigation, "Login")}>

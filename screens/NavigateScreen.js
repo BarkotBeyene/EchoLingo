@@ -1,13 +1,18 @@
 import { Text, View, Image, SafeAreaView, TouchableOpacity } from 'react-native';
-import { useState, useEffect } from 'react';
-import styles from '../styles.js';
+import { useState, useEffect, useContext } from 'react';
+import { Settings } from '../settings.js';
+import createStyles from '../styles.js';
 import { navigate, speak } from '../functions.js';
 import * as TTS from "expo-speech"; // TTS needs to be manually imported here so that TTS.stop() can be used
 import { recordStart, recordStop, getTranscription } from "../voice.js";
 
 export default function NavigateScreen({ navigation }) {
+  const { fontSize, isGreyscale, isAutoRead } = useContext(Settings);
+
+  createStyles(fontSize, isGreyscale);
+
   const message = "Now viewing: Navigate. Press bottom button to start and stop voice recording. Press bottom banner to return home. Press top right banner to repeat this message.";
-  useEffect(() => { speak(message); }, []); // useEffect ensures it doesn't play each time the buttons are re-rendered
+  useEffect(() => { if (isAutoRead) {speak(message);} }, []); // useEffect ensures it doesn't play each time the buttons are re-rendered
 
   const [recording, setRecording] = useState(false); // Recording state hook
 
@@ -29,9 +34,9 @@ export default function NavigateScreen({ navigation }) {
       return false;
     }
 
-    const transcriptText = await getTranscription(uri);
-    searchTranscript(transcriptText);
+    const transcriptText = (await getTranscription(uri)).toLowerCase();
     console.log(transcriptText);
+    searchTranscript(transcriptText);
   };
 
   const handleNavigation = async () => { // If the user tries to leave the page during recording it will first stop the recording
@@ -44,14 +49,31 @@ export default function NavigateScreen({ navigation }) {
 
   const keywords = { // Navigation keywords
     "home": "Home",
-    "learn": "Learn",
-    "practice": "Practice",
-    "community": "Community",
+    "main": "Home",
+
+    "visual settings": "Visual Settings",
+    "visual options": "Visual Settings",
+    "visual preferences": "Visual Settings",
+    "audio settings": "Audio Settings",
+    "audio options": "Audio Settings",
+    "audio preferences": "Audio Settings",
+    "settings": "Preferences",
+    "options": "Preferences",
     "preferences": "Preferences",
-    "navigate": "Navigate",
+
     "text": "TextMaterials",
     "audio": "AudioMaterials",
-    "notes": "Notes"
+    "notes": "Notes",
+    "learn": "Learn",
+    "learning": "Learn",
+    "learn": "Learn",
+    "materials": "Learn",
+
+    "practice": "Practice",
+
+    "community": "Community",
+
+    "navigate": "Navigate",
   };
 
   const searchTranscript = (transcriptText) => {
@@ -101,11 +123,11 @@ export default function NavigateScreen({ navigation }) {
 
         {/* Recording Button */}
           {recording ? (
-            <TouchableOpacity style={[styles.gridButton2, { backgroundColor: 'blue' }]} onPress={navigateTranscribe}>
+            <TouchableOpacity style={styles.gridButtonBigToggled} onPress={navigateTranscribe}>
               <Text style={styles.buttonText}>Stop Recording</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={[styles.gridButton2, { backgroundColor: 'red' }]} onPress={navigateRecord}>
+            <TouchableOpacity style={styles.gridButtonBig}  onPress={navigateRecord}>
               <Text style={styles.buttonText}>Start Recording</Text>
             </TouchableOpacity>
           )}

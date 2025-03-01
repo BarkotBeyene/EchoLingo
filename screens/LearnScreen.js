@@ -1,10 +1,16 @@
 import { Text, View, Image, SafeAreaView, TouchableOpacity } from 'react-native';
-import styles from '../styles.js';
+import { useEffect, useContext } from 'react';
+import { Settings } from '../settings.js';
+import createStyles from '../styles.js';
 import { navigate, speak } from '../functions.js';
 
 export default function LearnScreen({ navigation }) {
+  const { fontSize, isGreyscale, isAutoRead } = useContext(Settings);
+
+  createStyles(fontSize, isGreyscale);
+  
   message = "Now viewing: Learn. Press top left to view text materials. Press top right to view audio materials. Press bottom left to view notes. Press bottom banner to return home. Press top right banner to repeat this message.";
-  speak(message);
+  useEffect(() => { if (isAutoRead) {speak(message);} }, []);
 
   return (
     <SafeAreaView style={styles.container}>
