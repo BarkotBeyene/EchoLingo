@@ -10,6 +10,7 @@ import PracticeScreen from './screens/PracticeScreen';
 import CommunityScreen from './screens/CommunityScreen';
 import PreferencesScreen from './screens/PreferencesScreen';
 import NavigateScreen from './screens/NavigateScreen';
+import LoginScreen from './screens/LoginScreen';
 
 const Stack = createStackNavigator();
 
@@ -20,6 +21,7 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false, gestureEnabled: false }}>
         <Stack.Screen name="Launch" component={LaunchScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Learn" component={LearnScreen} />
         <Stack.Screen name="Practice" component={PracticeScreen} />
