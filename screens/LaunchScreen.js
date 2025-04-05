@@ -2,9 +2,13 @@ import { StyleSheet, Text, View, Image, SafeAreaView, TouchableWithoutFeedback, 
 import { useEffect } from 'react';
 import { navigate, speak } from '../functions.js';
 
-export default function LaunchScreen({ navigation }) {
-  useEffect(() => {speak("Welcome to EchoLingo. Press anywhere to continue.");}, []);
+export default function LaunchScreen({ navigation, route}) {
+  const { selectedLanguage = "English" } = route.params || {};
 
+  useEffect(() => {
+    speak("Welcome to EchoLingo! Press anywhere to continue.", selectedLanguage);
+  }, [selectedLanguage]);
+  
   return ( 
     <TouchableWithoutFeedback onPress={() => navigate(navigation, "Login")}>
       <View style={styles.fullScreen}>

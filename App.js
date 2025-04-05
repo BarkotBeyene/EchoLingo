@@ -10,7 +10,7 @@ import HomeScreen from './screens/HomeScreen';
 import LearnScreen from './screens/LearnScreen';
 import PracticeScreen from './screens/PracticeScreen';
 import QuizScreen from './screens/QuizScreen';
-import ExamScreen from './screens/ExamScreen';
+import ExamScreen from './screens/ExamScreen'
 import CommunityScreen from './screens/CommunityScreen';
 import PreferencesScreen from './screens/PreferencesScreen';
 import VisualSettingsScreen from './screens/VisualSettingsScreen';
@@ -19,7 +19,8 @@ import NavigateScreen from './screens/NavigateScreen';
 import TextMaterialsScreen from './screens/TextMaterialsScreen';
 import VideoMaterialsScreen from './screens/VideoMaterialsScreen';
 import MyNotesScreen from './screens/MyNotesScreen';
-
+import GrammarScreen from './screens/GrammarScreen';
+import VocabPronunciationScreen from './screens/VocabPronunciationScreen';
 
 const Stack = createStackNavigator();
 
@@ -44,6 +45,8 @@ export default function App() {
           <Stack.Screen name="Navigate" component={NavigateScreen} />
           <Stack.Screen name="VideoMaterials" component={VideoMaterialsScreen} />
           <Stack.Screen name="MyNotes" component={MyNotesScreen} />
+          <Stack.Screen name="Grammar" component={GrammarScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="VocabPronunciation" component={VocabPronunciationScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>
     </SettingsProvider>

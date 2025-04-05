@@ -1,11 +1,15 @@
-import { initializeApp } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'; 
-import { FIREBASE_API_KEY } from '@env';
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { FIREBASE_API_KEY } from '@env'; // Ensure @env is correctly configured
+// TODO: Add SDKs for Firebase products that you want to use
+
+console.log("API KEY:", FIREBASE_API_KEY); // Only during testing
 
 const firebaseConfig = {
-  apiKey: FIREBASE_API_KEY,
+  apiKey: "AIzaSyACtQWpAQDTG0WlU-aipG8Phh1Zax4kLuw",
   authDomain: "echolingo-b8e02.firebaseapp.com",
   projectId: "echolingo-b8e02",
   storageBucket: "echolingo-b8e02.appspot.com",

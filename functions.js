@@ -1,23 +1,22 @@
 import * as TTS from "expo-speech";
 
-export const navigate = (navigation, location) => {
-  TTS.stop(); // Stop TTS
-  navigation.navigate(location); // Navigate to screen at location
+const supportedLanguages = {
+  english: "en-US",
+  spanish: "es-ES",
+  french: "fr-FR",
+  german: "de-DE",
+  mandarin: "zh-CN",
 };
 
-export const speak = (message) => {
+// Unified `speak` function
+export const speak = (message, selectedLanguage = "English") => {
   TTS.stop();
 
-  const supportedLanguages = {
-    english: "en-US",  // English
-    spanish: "es-ES",  // Spanish
-    french: "fr-FR",  // French
-  };
+  const splits = message.match(/<(\w+)>([^<]+)/g);
 
-  const splits = message.match(/<(\w+)>([^<]+)/g);  // Create array of lang tags with their text
-
-  if (!splits) { // If no tags, speak in English
-    TTS.speak(message, { language: supportedLanguages.english });
+  if (!splits) {
+    const langCode = supportedLanguages[selectedLanguage.toLowerCase()] || supportedLanguages.english;
+    TTS.speak(message, { language: langCode });
     return;
   }
 
@@ -29,11 +28,16 @@ export const speak = (message) => {
       await new Promise((resolve) => {
         TTS.speak(text, {
           language: readLang,
-          onDone: resolve, // Wait for each before finishing.
+          onDone: resolve,
         });
       });
     }
   };
 
   speakSplits();
+};
+
+export const navigate = (navigation, location) => {
+  TTS.stop();
+  navigation.navigate(location);
 };

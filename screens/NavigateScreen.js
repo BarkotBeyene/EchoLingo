@@ -68,6 +68,10 @@ export default function NavigateScreen({ navigation }) {
     "learning": "Learn",
     "learn": "Learn",
     "materials": "Learn",
+    "grammar": "Grammar",
+    "vocabulary": "VocabPronunciation",
+    "pronunciation": "VocabPronunciation",
+    "words": "VocabPronunciation",
 
     "practice": "Practice",
     "ai": "AI Chat",
@@ -86,7 +90,7 @@ export default function NavigateScreen({ navigation }) {
 
   const searchTranscript = (transcriptText) => {
     if (transcriptText.includes("help")) {
-      speak("Clearly state any of the following options to visit them: Home, learn, text materials, audio materials, notes, practice, quiz, exam, AI chat, community, preferences, visual options, audio options, navigate.");
+      speak("Clearly state any of the following options to visit them: Home, learn, text materials, audio materials, notes, practice, quiz, exam, AI chat, grammar, vocabulary, community, preferences, visual options, audio options, navigate.");
       return false;
     }
 
