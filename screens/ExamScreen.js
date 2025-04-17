@@ -384,54 +384,109 @@ export default function ExamScreen({ navigation }) {
   const [options, setOptions] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingLanguage, setRecordingLanguage] = useState("english"); // State to track recording language
+  const [isAnswerMode, setIsAnswerMode] = useState(false);
+
+  const recordingLanguageMap = { 
+    Spanish: "spanish", 
+    French: "french", 
+    German: "german" 
+  };
 
   const handleMicPress = async () => {
-    if (isRecording) {
-      // Stop recording and process voice input
-      const uri = await recordStop();
-      setIsRecording(false);
+    try {
+      if (isRecording) {
+        const uri = await recordStop();
+        setIsRecording(false);
+        speak("Recording stopped.");
+        
+        if (!uri) {
+          console.error("Recording URI not found");
+          speak("Recording failed. Please try again.");
+          return;
+        }
 
-      if (uri) {
-        const recordingLanguageMap = { Spanish: "spanish", French: "french", German: "german" };
-        const languageCode = recordingLanguageMap[selectedLanguage] || "english";
-        let transcript = (await getTranscription(uri, languageCode)).toLowerCase();
+        if (isAnswerMode) {
+          const languageCode = recordingLanguageMap[selectedLanguage] || "english";
+          const transcript = await getTranscription(uri, languageCode);
+          
+          if (!transcript) {
+            console.error("No transcript received");
+            speak("Could not understand the recording. Please try again.");
+            return;
+          }
 
-        if (transcript.includes("help")) {
-          speak(
-            "Here are the available voice commands: " +
-            "Say 'mode generated' to switch to AI-generated mode. " +
-            "Say 'mode premade' to switch to premade mode. " +
-            "Say '10 questions', '20 questions', or '30 questions' to set the number of questions. " +
-            "Say 'question format' followed by a format to select a question format. " +
-            "Say 'question topic' followed by a topic to select a question topic. " +
-            "Say 'generate' to generate the exam. " +
-            "Say 'read questions' to read all questions aloud. " +
-            "Say 'next question' or 'previous question' to navigate between questions. " +
-            "Say 'answer' to switch to the selected language and provide an answer starting with the appropriate trigger word."
-          );
+          console.log("Answer recorded:", transcript);
+          const newAnswers = [...userAnswers];
+          newAnswers[currentQuestionIndex] = transcript.toLowerCase();
+          setUserAnswers(newAnswers);
+          speak(`Answer "${transcript}" recorded for question ${currentQuestionIndex + 1}.`);
+          setIsAnswerMode(false);
         } else {
-          processVoiceCommand(transcript);
+          const transcript = await getTranscription(uri);
+          
+          if (!transcript) {
+            console.error("No transcript received");
+            speak("Could not understand the command. Please try again.");
+            return;
+          }
+
+          console.log("Voice command recorded:", transcript);
+          const command = transcript.toLowerCase();
+
+          if (command.includes("help")) {
+            speak(
+              "Here are the available voice commands: " +
+              "Say 'mode generated' to switch to AI-generated mode. " +
+              "Say 'mode premade' to switch to premade mode. " +
+              "Say '10 questions', '20 questions', or '30 questions' to set the number of questions. " +
+              "Say 'question format' followed by a format to select a question format. " +
+              "Say 'question topic' followed by a topic to select a question topic. " +
+              "Say 'generate' to generate the exam. " +
+              "Say 'read questions' to read all questions aloud. " +
+              "Say 'next question' or 'previous question' to navigate between questions. " +
+              "Say 'answer' to switch to answer mode."
+            );
+          } else {
+            processVoiceCommand(command);
+          }
+        }
+      } else {
+        const started = await recordStart();
+        if (started) {
+          setIsRecording(true);
+          if (isAnswerMode) {
+            speak(`Please speak your answer for question ${currentQuestionIndex + 1} in ${selectedLanguage}.`);
+          } else {
+            speak("Recording started. Speak your command.");
+          }
+        } else {
+          speak("Could not start recording. Please try again.");
         }
       }
-    } else {
-      // Start recording
-      const recordingStarted = await recordStart();
-      if (recordingStarted) {
-        speak("Recording started.");
-        setIsRecording(true);
-      }
+    } catch (error) {
+      console.error("Voice recording error:", error);
+      speak("An error occurred with voice recording. Please try again.");
+      setIsRecording(false);
+      setIsAnswerMode(false);
     }
   };
 
   const processVoiceCommand = (transcript) => {
-    console.log(`User recorded: ${transcript}`); // Log the user's recorded transcript
-  
-    // Determine the current question format
-    const currentQuestionFormat = examMode === "AI" 
-      ? questionFormat[currentQuestionIndex] 
-      : premadeExams[premadeTopic][currentQuestionIndex]?.format;
-  
-    // Handle mode switching
+    if (!transcript) {
+      console.error("Empty transcript received");
+      speak("No command detected. Please try again.");
+      return;
+    }
+
+    console.log("Processing voice command:", transcript);
+
+    if (transcript.includes("answer")) {
+      setIsAnswerMode(true);
+      speak(`Answer mode activated. Press the mic button again to record your answer for question ${currentQuestionIndex + 1} in ${selectedLanguage}.`);
+      return;
+    }
+
+    // Rest of your existing processVoiceCommand logic...
     if (transcript.includes("mode")) {
       if (transcript.includes("generated")) {
         setExamMode("AI");
@@ -441,8 +496,7 @@ export default function ExamScreen({ navigation }) {
         speak("Switched to premade mode.");
       }
     }
-  
-    // Handle number of questions
+
     if (transcript.includes("questions")) {
       if (transcript.includes("10")) {
         setNumQuestions("10");
@@ -455,8 +509,7 @@ export default function ExamScreen({ navigation }) {
         speak("Number of questions set to 30.");
       }
     }
-  
-    // Handle question format selection
+
     if (transcript.includes("question format")) {
       dropdownOptions.questionFormat.forEach((format) => {
         if (transcript.includes(format.toLowerCase())) {
@@ -465,8 +518,7 @@ export default function ExamScreen({ navigation }) {
         }
       });
     }
-  
-    // Handle question topic selection
+
     if (transcript.includes("question topic")) {
       dropdownOptions.examTopic.forEach((topic) => {
         if (transcript.includes(topic.toLowerCase())) {
@@ -475,14 +527,12 @@ export default function ExamScreen({ navigation }) {
         }
       });
     }
-  
-    // Handle generating the exam
+
     if (transcript.includes("generate")) {
       handleGenerateExam();
       speak("Generating the exam.");
     }
-  
-    // Handle reading questions aloud
+
     if (transcript.includes("read questions")) {
       if (examMode === "AI" && generatedExam.length > 0) {
         let combinedText = "Here are your questions: ";
@@ -501,8 +551,7 @@ export default function ExamScreen({ navigation }) {
         speak("No questions available to read.");
       }
     }
-  
-    // Handle navigating between questions
+
     if (transcript.includes("next question")) {
       if (examMode === "AI" && generatedExam.length > 0) {
         if (currentQuestionIndex < generatedExam.length - 1) {
@@ -522,7 +571,7 @@ export default function ExamScreen({ navigation }) {
         speak("No questions available to navigate.");
       }
     }
-  
+
     if (transcript.includes("previous question")) {
       if (examMode === "AI" && generatedExam.length > 0) {
         if (currentQuestionIndex > 0) {
@@ -540,29 +589,6 @@ export default function ExamScreen({ navigation }) {
         }
       } else {
         speak("No questions available to navigate.");
-      }
-    }
-  
-    // Handle inputting answers
-    if (transcript.includes("answer")) {
-      const startWords = { Spanish: "inicio", French: "commencer", German: "anfangen" };
-      const triggerWord = startWords[selectedLanguage] || "start";
-      speak(`Recording language switched to ${selectedLanguage}. Please say '${triggerWord}' followed by your answer.`);
-      setRecordingLanguage(selectedLanguage.toLowerCase()); // Switch recording language to selected language
-    }
-  
-    const startWords = { Spanish: "inicio", French: "commencer", German: "anfangen" };
-    const triggerWord = startWords[selectedLanguage] || "start";
-    if (transcript.includes(triggerWord)) {
-      const match = transcript.match(new RegExp(`${triggerWord} (.+)`));
-      if (match && match[1]) {
-        const answer = match[1].trim();
-        const newAnswers = [...userAnswers];
-        newAnswers[currentQuestionIndex] = answer; // Update the answer for the current question
-        setUserAnswers(newAnswers);
-        speak(`Answer recorded for question ${currentQuestionIndex + 1}.`);
-      } else {
-        speak(`Please specify your answer after saying '${triggerWord}'.`);
       }
     }
   };
