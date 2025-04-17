@@ -60,43 +60,123 @@ export default function ExamScreen({ navigation }) {
   // Premade exam topics and data
   const premadeTopics = ["Numbers", "Colors", "Greetings & Introductions", "Days & Months & Seasons", "Family"];
   const [premadeTopic, setPremadeTopic] = useState("Numbers");
-  const premadeExams = {
-    "Numbers": [
-      { question: "What is '6' in Spanish?", answer: ["seis"] },
-      { question: "Write '50' in Spanish.", answer: ["cincuenta"] },
-      { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
-      { question: "In the sentence 'Yo tengo tres manzanas.', how many apples does the speaker have?", answer: ["three", "3"] },
-      { question: "Translate 'diez' into English.", answer: ["ten"] }
-    ],
-    "Colors": [
-      { question: "What does 'azul' mean in English?", answer: ["blue"] },
-      { question: "Choose the correct form: 'La camisa es (rojo/roja).' Which is correct?", answer: ["roja"] },
-      { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
-      { question: "In the sentence 'El coche es negro.', what color is the car?", answer: ["black"] },
-      { question: "Translate 'verde' to English.", answer: ["green"] }
-    ],
-    "Greetings & Introductions": [
-      { question: "What does 'Hola' mean?", answer: ["hello"] },
-      { question: "Translate 'My name is Anna' into Spanish.", answer: ["me llamo anna", "mi nombre es anna"] },
-      { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
-      { question: "In the sentence 'Hola, me llamo Ana. ¿Cómo estás?', what is Ana's name?", answer: ["ana"] },
-      { question: "Translate 'Buenos días' to English.", answer: ["good morning"] }
-    ],
-    "Days & Months & Seasons": [
-      { question: "What is 'lunes' in English?", answer: ["monday"] },
-      { question: "Identify the article: Why is 'mayo' used with 'el' in 'el mes de mayo'?", answer: ["because mes is masculine"] },
-      { question: "Listening Comprehension: (For demo, type 'N/A')", answer: "n/a" },
-      { question: "In the sentence 'Hoy es jueves y estamos en el mes de septiembre.', what day and month are mentioned?", answer: ["thursday and september"] },
-      { question: "Translate 'invierno' into English.", answer: ["winter"] }
-    ],
-    "Family": [
-      { question: "What is the English translation of 'madre'?", answer: ["mother", "mom"] },
-      { question: "Explain the gender difference between 'hermano' and 'hermana'.", answer: ["hermano is masculine and hermana is feminine"] },
-      { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
-      { question: "In the sentence 'Tengo dos hermanos y una hermana.', how many siblings does the speaker have and what are their genders?", answer: ["three siblings: two brothers and one sister"] },
-      { question: "Translate 'padre' into English.", answer: ["father", "dad"] }
-    ]
+
+  const allPremadeExams = {
+    Spanish: {
+      "Numbers": [
+        { question: "What is '6' in Spanish?", answer: ["seis"] },
+        { question: "Write '50' in Spanish.", answer: ["cincuenta"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Yo tengo tres manzanas.', how many apples does the speaker have?", answer: ["three", "3"] },
+        { question: "Translate 'diez' into English.", answer: ["ten"] }
+      ],
+      "Colors": [
+        { question: "What does 'azul' mean in English?", answer: ["blue"] },
+        { question: "Choose the correct form: 'La camisa es (rojo/roja).' Which is correct?", answer: ["roja"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'El coche es negro.', what color is the car?", answer: ["black"] },
+        { question: "Translate 'verde' to English.", answer: ["green"] }
+      ],
+      "Greetings & Introductions": [
+        { question: "What does 'Hola' mean?", answer: ["hello"] },
+        { question: "Translate 'My name is Anna' into Spanish.", answer: ["me llamo anna", "mi nombre es anna"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Hola, me llamo Ana. ¿Cómo estás?', what is Ana's name?", answer: ["ana"] },
+        { question: "Translate 'Buenos días' to English.", answer: ["good morning"] }
+      ],
+      "Days & Months & Seasons": [
+        { question: "What is 'lunes' in English?", answer: ["monday"] },
+        { question: "Identify the article: Why is 'mayo' used with 'el' in 'el mes de mayo'?", answer: ["because mes is masculine"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Hoy es jueves y estamos en el mes de septiembre.', what day and month are mentioned?", answer: ["thursday and september"] },
+        { question: "Translate 'invierno' into English.", answer: ["winter"] }
+      ],
+      "Family": [
+        { question: "What is the English translation of 'madre'?", answer: ["mother", "mom"] },
+        { question: "Explain the gender difference between 'hermano' and 'hermana'.", answer: ["hermano is masculine and hermana is feminine"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Tengo dos hermanos y una hermana.', how many siblings does the speaker have and what are their genders?", answer: ["three siblings: two brothers and one sister"] },
+        { question: "Translate 'padre' into English.", answer: ["father", "dad"] }
+      ]
+    },
+    French: {
+      "Numbers": [
+        { question: "What is '6' in French?", answer: ["six"] },
+        { question: "Write '50' in French.", answer: ["cinquante"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'J'ai trois pommes.', how many apples does the speaker have?", answer: ["three", "3"] },
+        { question: "Translate 'dix' into English.", answer: ["ten"] }
+      ],
+      "Colors": [
+        { question: "What does 'bleu' mean in English?", answer: ["blue"] },
+        { question: "Choose the correct form: 'La chemise est (bleu/bleue).' Which is correct?", answer: ["bleue"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'La voiture est noire.', what color is the car?", answer: ["black"] },
+        { question: "Translate 'vert' to English.", answer: ["green"] }
+      ],
+      "Greetings & Introductions": [
+        { question: "What does 'Bonjour' mean?", answer: ["hello", "good morning", "good day"] },
+        { question: "Translate 'My name is Anna' into French.", answer: ["je m'appelle anna", "je suis anna"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Bonjour, je m'appelle Marie. Comment allez-vous?', what is Marie's name?", answer: ["marie"] },
+        { question: "Translate 'Bonsoir' to English.", answer: ["good evening"] }
+      ],
+      "Days & Months & Seasons": [
+        { question: "What is 'lundi' in English?", answer: ["monday"] },
+        { question: "Identify the article: Why is 'mai' used with 'le' in 'le mois de mai'?", answer: ["because mois is masculine"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Aujourd'hui c'est jeudi et nous sommes en septembre.', what day and month are mentioned?", answer: ["thursday and september"] },
+        { question: "Translate 'hiver' into English.", answer: ["winter"] }
+      ],
+      "Family": [
+        { question: "What is the English translation of 'mère'?", answer: ["mother", "mom"] },
+        { question: "Explain the gender difference between 'frère' and 'sœur'.", answer: ["frère is masculine and sœur is feminine"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'J'ai deux frères et une sœur.', how many siblings does the speaker have?", answer: ["three siblings: two brothers and one sister"] },
+        { question: "Translate 'père' into English.", answer: ["father", "dad"] }
+      ]
+    },
+    German: {
+      "Numbers": [
+        { question: "What is '6' in German?", answer: ["sechs"] },
+        { question: "Write '50' in German.", answer: ["fünfzig"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Ich habe drei Äpfel.', how many apples does the speaker have?", answer: ["three", "3"] },
+        { question: "Translate 'zehn' into English.", answer: ["ten"] }
+      ],
+      "Colors": [
+        { question: "What does 'blau' mean in English?", answer: ["blue"] },
+        { question: "Choose the correct form: 'Das Hemd ist (blau/blaue).' Which is correct?", answer: ["blau"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Das Auto ist schwarz.', what color is the car?", answer: ["black"] },
+        { question: "Translate 'grün' to English.", answer: ["green"] }
+      ],
+      "Greetings & Introductions": [
+        { question: "What does 'Hallo' mean?", answer: ["hello"] },
+        { question: "Translate 'My name is Anna' into German.", answer: ["ich heiße anna", "ich bin anna"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Hallo, ich heiße Hans. Wie geht es dir?', what is Hans's name?", answer: ["hans"] },
+        { question: "Translate 'Guten Morgen' to English.", answer: ["good morning"] }
+      ],
+      "Days & Months & Seasons": [
+        { question: "What is 'Montag' in English?", answer: ["monday"] },
+        { question: "Identify the article: Why is 'Mai' used with 'der' in 'der Monat Mai'?", answer: ["because monat is masculine"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Heute ist Donnerstag und wir sind im September.', what day and month are mentioned?", answer: ["thursday and september"] },
+        { question: "Translate 'Winter' into English.", answer: ["winter"] }
+      ],
+      "Family": [
+        { question: "What is the English translation of 'Mutter'?", answer: ["mother", "mom"] },
+        { question: "Explain the gender difference between 'Bruder' and 'Schwester'.", answer: ["bruder is masculine and schwester is feminine"] },
+        { question: "Listening Comprehension: (For demo, type 'N/A')", answer: ["n/a"] },
+        { question: "In the sentence 'Ich habe zwei Brüder und eine Schwester.', how many siblings does the speaker have?", answer: ["three siblings: two brothers and one sister"] },
+        { question: "Translate 'Vater' into English.", answer: ["father", "dad"] }
+      ]
+    }
   };
+
+  // Use a computed property to get the correct language questions
+  const premadeExams = allPremadeExams[selectedLanguage] || allPremadeExams.Spanish;
 
   const [userAnswers, setUserAnswers] = useState(Array(5).fill(""));
   const [premadeResult, setPremadeResult] = useState("");
@@ -575,7 +655,23 @@ export default function ExamScreen({ navigation }) {
             {examMode === "AI" && generatedExam.length > 0 && (
               <>
                 {generatedExam.map((q, index) => (
-                  <View key={index} style={{ marginVertical: 10, paddingHorizontal: 10 }}>
+                  <View key={index} style={{ 
+                    marginVertical: 10, 
+                    marginHorizontal: '1%',
+                    padding: 15,
+                    borderWidth: 2,
+                    borderColor: dropdownColor,
+                    borderRadius: 10,
+                    backgroundColor: 'white',
+                    shadowColor: "#000",
+                    shadowOffset: {
+                      width: 0,
+                      height: 2,
+                    },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 5
+                  }}>
                     <Text style={{ fontSize: 16 }}>{`Q${index + 1}: ${q.question}`}</Text>
                     <TextInput
                       style={[styles.Input, { marginTop: 5 }]}
@@ -605,27 +701,45 @@ export default function ExamScreen({ navigation }) {
           </>
         ) : (
           <>
-            {/* Premade Exam */}
-            <Text style={{ paddingHorizontal: 10, fontSize: 18 }}>Select Topic</Text>
-            <Picker
-              selectedValue={premadeTopic}
-              onValueChange={(itemValue) => {
-                setPremadeTopic(itemValue);
-                setUserAnswers(Array(5).fill(""));
-                setPremadeResult("");
-              }}
-              style={[styles.picker, { color: 'black' }]}
-            >
-              {premadeTopics.map(topic => (
-                <Picker.Item key={topic} label={topic} value={topic} />
-              ))}
-            </Picker>
+            {/* Premade Exam Topic Selector */}
+            <TouchableOpacity style={[styles.dropdownContainer, { paddingHorizontal: 16, paddingVertical: 10, margin: '1%', backgroundColor: dropdownColor, borderRadius: 10 }]}>
+              <Text style={[styles.labelText, { color: 'white', fontWeight: 'bold', fontSize: 18 }]}>Select Topic</Text>
+              <Picker
+                selectedValue={premadeTopic}
+                onValueChange={(itemValue) => {
+                  setPremadeTopic(itemValue);
+                  setUserAnswers(Array(5).fill(""));
+                  setPremadeResult("");
+                }}
+                style={[styles.picker, { color: 'white' }]}
+              >
+                {premadeTopics.map(topic => (
+                  <Picker.Item key={topic} label={topic} value={topic} />
+                ))}
+              </Picker>
+            </TouchableOpacity>
             {/* Read Aloud Questions Button */}
             <TouchableOpacity onPress={readAllQuestions} style={{ margin: '1%', padding: 10, backgroundColor: dropdownColor, borderRadius: 10 }}>
               <Text style={{ color: 'white', textAlign: 'center' }}>Read Aloud Questions</Text>
             </TouchableOpacity>
             {premadeExams[premadeTopic].map((q, index) => (
-              <View key={index} style={{ marginVertical: 10, paddingHorizontal: 10 }}>
+              <View key={index} style={{ 
+                marginVertical: 10, 
+                marginHorizontal: '1%',
+                padding: 15,
+                borderWidth: 2,
+                borderColor: dropdownColor,
+                borderRadius: 10,
+                backgroundColor: 'white',
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                elevation: 5
+              }}>
                 <Text style={{ fontSize: 16 }}>{`Q${index+1}: ${q.question}`}</Text>
                 <TextInput
                   style={[styles.Input, { marginTop: 5 }]}
