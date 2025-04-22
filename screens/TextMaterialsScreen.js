@@ -16,8 +16,11 @@ import { navigate, speak } from '../functions';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { storage, db } from "../backend/config/firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 import { WebView } from 'react-native-webview';
+import { getAuth } from "firebase/auth";
+import { ActivityIndicator } from 'react-native';
+
 
 export default function TextMaterialsScreen({ navigation }) {
   const { fontSize, isGreyscale, isAutoRead, selectedLanguage } = useContext(Settings);
@@ -40,84 +43,124 @@ export default function TextMaterialsScreen({ navigation }) {
   const [savedMaterials, setSavedMaterials] = useState([]);
   const [exploreMaterials, setExploreMaterials] = useState([]);
   const [pdfToView, setPdfToView] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+
 
   useEffect(() => {
     if (isAutoRead) speak(message);
     fetchExploreMaterials();
+    fetchSavedMaterials();
   }, []);
 
+  //default explore materials
   const fetchExploreMaterials = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'Default_text_materials'));
       const materials = [];
-  
+
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.language === selectedLanguage) { // 👈 filter here
+        if (data.language === selectedLanguage) { 
           materials.push({ id: doc.id, ...data });
         }
       });
-  
+
       setExploreMaterials(materials);
     } catch (error) {
       console.error("Error fetching explore materials:", error);
     }
   };
-  
+
+  //saved materials fetch
+  const fetchSavedMaterials = async () => {
+    try {
+      const auth = getAuth();
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
+
+      const snapshot = await getDocs(collection(db, `Saved_text_materials/${uid}/materials`));
+      const materials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSavedMaterials(materials);
+    } catch (err) {
+      console.error("Error fetching saved materials", err);
+    }
+  };
+
+  //pick for upload
   const pickFile = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: '*/*' });
-    if (result.type === 'success') {
-      setMaterialFile(result);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (materialTitle.trim() && materialFile) {
-      try {
-        const response = await fetch(materialFile.uri);
-        const blob = await response.blob();
-
-        const fileRef = ref(storage, `materials/${Date.now()}_${materialFile.name}`);
-        const uploadTask = uploadBytesResumable(fileRef, blob);
-
-        uploadTask.on(
-          'state_changed',
-          null,
-          (error) => {
-            console.error('Upload error:', error);
-            speak('Upload failed.');
-          },
-          async () => {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-            setSavedMaterials([
-              ...savedMaterials,
-              {
-                title: materialTitle,
-                description: materialDescription || 'No description provided',
-                language: selectedLanguage,
-                file: {
-                  name: materialFile.name,
-                  url: downloadURL,
-                },
-              },
-            ]);
-
-            setMaterialTitle('');
-            setMaterialDescription('');
-            setMaterialFile(null);
-            setUploadModalVisible(false);
-            speak('Material uploaded successfully.');
-          }
-        );
-      } catch (error) {
-        console.error('Upload error:', error);
-        speak('Something went wrong while uploading.');
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+      });
+  
+      if (result.type === 'success') {
+        console.log("✅ File selected:", result.name);
+        setMaterialFile(result);
+      } else {
+        console.log("File selection canceled.");
+        speak("File selection canceled.");
       }
-    } else {
-      speak('Please provide a title and select a file.');
+    } catch (error) {
+      console.error("Error selecting file:", error);
+      speak("Something went wrong while selecting a file.");
     }
   };
+  
+  const handleUpload = async () => {
+    if (!materialTitle.trim() || !materialFile) {
+      speak("Please enter a title and select a file.");
+      return;
+    }
+  
+    setIsUploading(true);
+  
+    try {
+      const response = await fetch(materialFile.uri);
+      const blob = await response.blob();
+  
+      const fileName = `user_materials/${Date.now()}_${materialFile.name}`;
+      const uploadRef = ref(storage, fileName);
+      const uploadTask = uploadBytesResumable(uploadRef, blob);
+  
+      uploadTask.on('state_changed', null, async (error) => {
+        console.error("Upload error:", error);
+        speak("Upload failed.");
+        setIsUploading(false);
+      }, async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        const uid = getAuth().currentUser?.uid;
+  
+        if (!uid) {
+          speak("You need to be logged in to upload.");
+          setIsUploading(false);
+          return;
+        }
+  
+        await addDoc(collection(db, `Saved_text_materials/${uid}/materials`), {
+          title: materialTitle,
+          description: materialDescription || "No description",
+          url: downloadURL,
+          timestamp: Date.now(),
+        });
+  
+        // Reset form
+        setMaterialTitle('');
+        setMaterialDescription('');
+        setMaterialFile(null);
+        setUploadModalVisible(false);
+        speak("Upload successful.");
+        fetchSavedMaterials();
+      });
+  
+    } catch (error) {
+      console.error("Upload exception:", error);
+      speak("Something went wrong during upload.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: '#fff8f0' }]}>
@@ -297,7 +340,7 @@ export default function TextMaterialsScreen({ navigation }) {
         style={[styles.bottomButton, { backgroundColor: '#B22222' }]}
         onPress={() => navigate(navigation, 'Learn')}
       >
-        <Text style={[styles.buttonText, { fontSize: numericFontSize + 14, color: '#fff' }]}>
+        <Text style={[styles.buttonText, { fontSize: numericFontSize + 20, color: '#fff' }]}>
           Return to Learn
         </Text>
       </TouchableOpacity>
@@ -357,31 +400,42 @@ export default function TextMaterialsScreen({ navigation }) {
 
             <TouchableOpacity
               onPress={pickFile}
+              disabled={!!materialFile}
               style={{
-                backgroundColor: '#FFD700',
+                backgroundColor: materialFile ? '#d3d3d3' : '#FFD700',
                 padding: 10,
                 borderRadius: 5,
-                marginBottom: 10
+                marginBottom: 10,
+                alignItems: 'center',
               }}
             >
-              <Text style={{ textAlign: 'center', fontWeight: '600' }}>
-                {materialFile ? materialFile.name : 'Select a File'}
+              <Text style={{ fontWeight: '600', color: materialFile ? '#555' : '#000' }}>
+                {materialFile ? 'File Selected' : 'Select a File'}
               </Text>
             </TouchableOpacity>
+
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <TouchableOpacity
                 onPress={handleUpload}
+                disabled={isUploading}
                 style={{
-                  backgroundColor: '#34C759',
+                  backgroundColor: isUploading ? '#aaa' : '#34C759',
                   padding: 10,
                   borderRadius: 5,
                   flex: 1,
-                  marginRight: 5
+                  marginRight: 5,
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Upload</Text>
+                {isUploading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={{ color: '#fff', fontWeight: 'bold' }}>Upload</Text>
+                )}
               </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={() => setUploadModalVisible(false)}
                 style={{
