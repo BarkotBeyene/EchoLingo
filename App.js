@@ -5,6 +5,7 @@ import { SettingsProvider } from './settings.js';
 
 import LaunchScreen from './screens/LaunchScreen';
 import LoginScreen from './screens/LoginScreen.js';
+import SignupScreen from './screens/SignupScreen';
 import AIChatScreen from './screens/AIChatScreen';
 import HomeScreen from './screens/HomeScreen';
 import LearnScreen from './screens/LearnScreen';
@@ -31,6 +32,7 @@ export default function App() {
         <Stack.Navigator screenOptions={{ headerShown: false, gestureEnabled: false }}>
           <Stack.Screen name="Launch" component={LaunchScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="SignupScreen" component={SignupScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Learn" component={LearnScreen} />
           <Stack.Screen name="Practice" component={PracticeScreen} />
