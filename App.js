@@ -1,8 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
+import FlashcardScreen from './screens/FlashcardScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SettingsProvider } from './settings.js';
-
 import LaunchScreen from './screens/LaunchScreen';
 import LoginScreen from './screens/LoginScreen.js';
 import AIChatScreen from './screens/AIChatScreen';
@@ -47,6 +47,7 @@ export default function App() {
           <Stack.Screen name="MyNotes" component={MyNotesScreen} />
           <Stack.Screen name="Grammar" component={GrammarScreen} options={{ headerShown: false }} />
           <Stack.Screen name="VocabPronunciation" component={VocabPronunciationScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Flashcards" component={FlashcardScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SettingsProvider>
