@@ -150,11 +150,12 @@ export default function VideoMaterialsScreen({ navigation }) {
                 <View
                   key={idx}
                   style={{
-                    width: 200,
+                    width: 180,
+                    height: 150,
+                    backgroundColor: '#FFD700',
                     marginRight: 12,
-                    backgroundColor: '#FFEFD5',
-                    padding: 10,
                     borderRadius: 12,
+                    justifyContent: 'center',
                     alignItems: 'center',
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },

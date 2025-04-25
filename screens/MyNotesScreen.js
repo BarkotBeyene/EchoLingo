@@ -188,7 +188,7 @@ const handleRecord = async () => {
     const started = await recordStart();
     if (started) {
       setIsRecording(true);
-      speak('Recording started. Please speak your note.');
+      speak('Recording.');
     }
   } else {
     const uri = await recordStop();
