@@ -3,7 +3,7 @@ name: Expo Publish
 on:
   push:
     branches:
-      - main
+      - Login-tweaks
   workflow_dispatch:
     inputs:
       message:
@@ -67,4 +67,4 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git add README.md
           git commit -m "Update README with latest update link" || echo "No changes to commit"
-          git push origin main
+          git push origin Login-tweaks
