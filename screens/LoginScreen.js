@@ -174,12 +174,12 @@ const loginStyles = StyleSheet.create({
   },
   emailInput: {
     position: 'absolute',
-    top: 190,
+    bottom: '60%',
     left: 10,
   },
   speakEmailButton: {
     position: 'absolute',
-    top: 190,
+    bottom: '60%',
     right: 10,
   },  
   passwordInput: { // style for password input
