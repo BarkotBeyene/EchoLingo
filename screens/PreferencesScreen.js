@@ -2,22 +2,24 @@ import { Text, View, Image, SafeAreaView, TouchableOpacity } from 'react-native'
 import { useEffect, useContext } from 'react';
 import { Settings } from '../settings';
 import createStyles from '../styles.js';
-import { navigate, speak } from '../functions.js';
-import { Picker } from '@react-native-picker/picker';
+import { navigate, speak, sound } from '../functions.js';
 
 export default function PreferencesScreen({ navigation }) {
-  const { fontSize, isGreyscale, isAutoRead, selectedLanguage, changeLanguage } = useContext(Settings);
+  const { fontSize, isGreyscale, isAutoRead, selectedLanguage, changeLanguage, isSound } = useContext(Settings);
 
   createStyles(fontSize, isGreyscale);
   
-  message = "Now viewing: Preferences. Press top left to edit visual settings. Press top right to edit audio settings. Press drop down and select the language you want to learn. Press bottom banner to return home. Press top right banner to repeat this message.";
-  useEffect(() => { if (isAutoRead) {speak(message);} }, []);
+  message = "Now viewing: Preferences. Press top left to edit visual settings. Press top right to edit audio settings. Press bottom to toggle your selected language. Press bottom banner to return home. Press top right banner to repeat this message.";
+  const shortMessage = "Preferences";
+  useEffect(() => { if (isAutoRead === "Long") {speak(message);} else if (isAutoRead === "Short") {speak(shortMessage);} }, []);
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Title Banner */}
       <View style={styles.topBanner}>
-        <Text style={styles.titleText}>Preferences</Text>
+        <TouchableOpacity onPress={() => speak(shortMessage)}>
+          <Text style={styles.titleText}>Preferences</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.topRightBannerButton} onPress={() => speak(message)}>
           <Image source={require('../assets/volume.png')} />
@@ -36,28 +38,14 @@ export default function PreferencesScreen({ navigation }) {
         <TouchableOpacity style={styles.gridButton4} onPress={() => navigate(navigation, "Audio Settings")}>
           <Text style={styles.buttonText}>Audio Settings</Text>
         </TouchableOpacity>
-      </View>
-
-      {/* Language Selection Section */}
-      <View style={{ alignItems: 'center', marginVertical: 24 }}>
-        <Text style={[styles.buttonText, { fontSize: 18, marginBottom: 8, color: 'black' }]}>Learning Language:</Text>
-        <View style={{ width: 250, borderWidth: 1, borderColor: '#ccc', borderRadius: 10, backgroundColor: '#fff' }}>
-          <Picker
-            selectedValue={selectedLanguage}
-            onValueChange={(itemValue) => changeLanguage(itemValue)}
-            style={{ height: 50, width: '100%' }}
-            dropdownIconColor="#000"
-          >
-            <Picker.Item label="Spanish" value="Spanish" />
-            <Picker.Item label="French" value="French" />
-            <Picker.Item label="German" value="German" />
-            <Picker.Item label="Mandarin" value="Mandarin" />
-          </Picker>
-        </View>
+        <TouchableOpacity style={styles.gridButtonBig} onPress={() => {sound(require("../assets/toggle.wav"), isSound); if (selectedLanguage === "Spanish") {changeLanguage("French"); speak("French");} else {changeLanguage("Spanish"); speak("Spanish");}}}>
+          <Text style={styles.buttonText}>Language{'\n'}</Text>
+          <Text style={styles.buttonText}>{selectedLanguage}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Return Button */}
-      <TouchableOpacity style={styles.bottomButton} onPress={() => navigate(navigation, "Home")}>
+      <TouchableOpacity style={styles.bottomButton} onPress={() => {sound(require("../assets/return.wav"), isSound); navigate(navigation, "Home")}}>
         <Text style={styles.buttonText}>Return to Home</Text>
       </TouchableOpacity>
     </SafeAreaView>

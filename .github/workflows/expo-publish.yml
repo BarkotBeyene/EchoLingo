@@ -39,6 +39,13 @@ jobs:
           CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
 
+      - name: Run Unit Tests
+        run: npm test -- __tests__/functions.test.js
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+
       - name: Create Update
         id: update
         run: |

@@ -12,11 +12,15 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 import { Settings } from '../settings';
 import createStyles from '../styles';
-import { navigate, speak } from '../functions';
+import { navigate, speak, sound } from '../functions';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { Video } from 'expo-av';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../backend/config/firebaseConfig';
 
 export default function VideoMaterialsScreen({ navigation }) {
-  const { fontSize, isGreyscale, isAutoRead } = useContext(Settings);
+  const { fontSize, isGreyscale, isAutoRead, selectedLanguage, isSound } = useContext(Settings);
+
 
   const fontSizeMapping = {
     Small: 14,
@@ -28,16 +32,47 @@ export default function VideoMaterialsScreen({ navigation }) {
   const styles = createStyles(numericFontSize, isGreyscale);
 
   const message = 'Now viewing: Video Materials.';
-
-  useEffect(() => {
-    if (isAutoRead) speak(message);
-  }, []);
+  const shortMessage = "Video Materials";
 
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
   const [videoTitle, setVideoTitle] = useState('');
   const [videoDescription, setVideoDescription] = useState('');
   const [videoFile, setVideoFile] = useState(null);
   const [savedVideos, setSavedVideos] = useState([]);
+  const [exploreVideos, setExploreVideos] = useState([]);
+  const [fullscreenVideo, setFullscreenVideo] = useState(null);
+
+
+  useEffect(() => {
+    if (isAutoRead === "Long") {speak(message);} else if (isAutoRead === "Short") {speak(shortMessage);}
+    fetchExploreVideos();
+  }, [selectedLanguage]);
+
+  useEffect(() => {
+    if (fullscreenVideo && isAutoRead) {
+      speak("Tap the top of the screen to close the video.");
+    }
+  }, [fullscreenVideo]);
+  
+  const fetchExploreVideos = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'Default_Video_Materials'));
+      const videos = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.language === selectedLanguage) {
+          videos.push({ id: doc.id, ...data });
+        }
+      });
+
+      setExploreVideos(videos);
+    } catch (error) {
+      console.error("Failed to fetch explore videos:", error);
+      speak("Failed to load explore videos.");
+    }
+  };
+
 
   const pickVideo = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: 'video/*' });
@@ -77,9 +112,9 @@ export default function VideoMaterialsScreen({ navigation }) {
           <Image source={require('../assets/back.png')} style={styles.icon} />
         </TouchableOpacity>
 
-        <Text style={[styles.titleText, { fontSize: numericFontSize + 10, color: '#B22222' }]}>
-          Video Materials
-        </Text>
+        <TouchableOpacity onPress={() => speak(shortMessage)}>
+          <Text style={styles.titleText}>Video Materials</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.topRightBannerButton}
@@ -111,34 +146,57 @@ export default function VideoMaterialsScreen({ navigation }) {
           </Text>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 24 }}>
-            {[1, 2, 3].map((num) => (
-              <View
-                key={num}
-                style={{
-                  width: 180,
-                  height: 150,
-                  backgroundColor: '#FFD700',
-                  marginRight: 12,
-                  borderRadius: 12,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 3,
-                  elevation: 3,
-                }}
-              >
-                <FontAwesome5 name="video" size={28} color="#B22222" />
-                <Text style={{ fontSize: numericFontSize + 3, marginTop: 10, color: '#8B0000' }}>
-                  Sample Video {num}
-                </Text>
-              </View>
-            ))}
+            {exploreVideos.length > 0 ? (
+              exploreVideos.map((video, idx) => (
+                <View
+                  key={idx}
+                  style={{
+                    width: 200,
+                    height: 190,
+                    marginRight: 12,
+                    backgroundColor: '#FFEFD5',
+                    padding: 10,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                    elevation: 3,
+                  }}
+                >
+                  <TouchableOpacity onPress={() => setFullscreenVideo(video.videoUrl)}>
+                    <Video
+                      source={{ uri: video.videoUrl }}
+                      useNativeControls
+                      resizeMode="contain"
+                      style={{ width: 180, height: 100, borderRadius: 8 }}
+                    />
+                  </TouchableOpacity>
+                  <Text
+                    style={{
+                      fontSize: numericFontSize,
+                      marginTop: 6,
+                      color: '#8B0000',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                    }}
+                  >
+                    {video.title}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={{ fontSize: numericFontSize + 2, color: 'gray' }}>
+                Loading videos...
+              </Text>
+            )}
           </ScrollView>
+
 
           <View style={{ height: 1, backgroundColor: '#ccc', marginVertical: 16 }} />
 
+          {/* Saved Section */}
           <Text style={{ color: '#8B0000', fontSize: numericFontSize + 6, marginBottom: 10 }}>
             <FontAwesome5 name="bookmark" size={20} color="#8B0000" /> Saved Videos
           </Text>
@@ -180,6 +238,7 @@ export default function VideoMaterialsScreen({ navigation }) {
         </View>
       </ScrollView>
 
+      {/* Upload Button */}
       <TouchableOpacity
         style={{
           backgroundColor: '#FF4500',
@@ -198,16 +257,22 @@ export default function VideoMaterialsScreen({ navigation }) {
         }}
         onPress={() => setUploadModalVisible(true)}
       >
-        <Text style={[styles.buttonText, { color: '#fff', fontSize: numericFontSize + 5 }]}>Upload New Video</Text>
+        <Text style={[styles.buttonText, { color: '#fff', fontSize: numericFontSize + 5 }]}>
+          Upload New Video
+        </Text>
       </TouchableOpacity>
 
+      {/* Return Button */}
       <TouchableOpacity
         style={[styles.bottomButton, { backgroundColor: '#B22222' }]}
-        onPress={() => navigate(navigation, 'Learn')}
+        onPress={() => {sound(require("../assets/return.wav"), isSound); navigate(navigation, "Home")}}
       >
-        <Text style={[styles.buttonText, { fontSize: numericFontSize + 14, color: '#fff' }]}>Return to Learn</Text>
+        <Text style={[styles.buttonText, { fontSize: numericFontSize + 14, color: '#fff' }]}>
+          Return to Home
+        </Text>
       </TouchableOpacity>
 
+      {/* Upload Modal */}
       <Modal visible={uploadModalVisible} animationType="slide" transparent>
         <View
           style={{
@@ -309,6 +374,27 @@ export default function VideoMaterialsScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+      {fullscreenVideo && (
+  <Modal visible animationType="slide">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
+      <TouchableOpacity
+        onPress={() => setFullscreenVideo(null)}
+        style={{ padding: 12, backgroundColor: '#B22222', alignItems: 'center' }}
+      >
+        <Text style={{ color: '#fff', fontSize: 16 }}>Close</Text>
+      </TouchableOpacity>
+
+      <Video
+        source={{ uri: fullscreenVideo }}
+        useNativeControls
+        resizeMode="contain"
+        shouldPlay
+        style={{ flex: 1 }}
+      />
+    </SafeAreaView>
+  </Modal>
+)}
+
     </SafeAreaView>
   );
 }

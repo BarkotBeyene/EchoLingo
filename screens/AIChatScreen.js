@@ -2,7 +2,7 @@ import { Text, View, Image, SafeAreaView, TouchableOpacity, TextInput, Keyboard,
 import { useEffect, useContext, useState } from 'react';
 import { Settings } from '../settings.js';
 import createStyles from '../styles.js';
-import { navigate, speak } from '../functions.js';
+import { navigate, speak, sound } from '../functions.js';
 import axios from 'axios';
 import { OPENAI_API_KEY } from '@env';
 import * as TTS from "expo-speech"; // TTS needs to be manually imported here so that TTS.stop() can be used
@@ -11,7 +11,7 @@ import * as Sharing from 'expo-sharing';
 import { recordStart, recordStop, getTranscription } from "../voice.js";
 
 export default function AIChatScreen({ navigation }) {
-  const { fontSize, isGreyscale, isAutoRead } = useContext(Settings);
+  const { fontSize, isGreyscale, isAutoRead, selectedLanguage, isSound } = useContext(Settings);
 
   createStyles(fontSize, isGreyscale);
   
@@ -20,11 +20,24 @@ export default function AIChatScreen({ navigation }) {
   const [messageHistory, setMessageHistory] = useState([]);
   const [messageLog, setMessageLog] = useState([]);
 
-  message = "Now viewing: AI Chat. Press bottom text field and type to enter your message. When you are finished, press the done button on your device's keyboard. Use the buttons to the right of text entry for voice input. To save a log of your chat, please press the middle of the top banner.";
-  useEffect(() => { if (isAutoRead) {speak(message);} }, []);
+  message = "Now viewing: AI Chat. Press bottom text field and type to enter your message. When you are finished, press the done button on your device's keyboard. Use the buttons to the right of text entry for voice input. To save a log of your chat, please press the left side of the top banner.";
+  const shortMessage = "A.I Chat";
+  useEffect(() => { if (isAutoRead === "Long") {speak(message);} else if (isAutoRead === "Short") {speak(shortMessage);} }, []);
 
   const [recording, setRecording] = useState(false); // Recording state hook
   const [language, setLanguage] = useState("english");
+
+  const getLangShort = (language) => {
+    if (language === "Spanish") return "Es.";
+    if (language === "French") return "Fr.";
+    return "En.";
+  };
+
+  const getLangTemplate = (language) => {
+    if (language === "Spanish") return "¡Hola! ¿Cómo estás hoy?";
+    if (language === "French") return "Salut ! Comment ça va aujourd'hui ?";
+    return "¡Hola! ¿Cómo estás hoy?";
+  };
 
   const exportMessageLog = async (messageLog) => {
     if (messageLog.length === 0) { // Don't create empty log
@@ -107,9 +120,9 @@ export default function AIChatScreen({ navigation }) {
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4-turbo',
           messages: [
-            { role: 'system', content: "You are a helpful AI tutor assisting blind and vision-impaired English speakers in learning Spanish. Your goal is to provide both English and Spanish sentences, but avoid simple repetitions. Start with an English sentence, and only use Spanish if the user asks or you feel it is. Always enclose language switches within tags, such as <english> or <spanish>. For mixed responses, tag each sentence appropriately. Example:\n\n<english> Hello! How are you today? <spanish> ¡Hola! ¿Cómo estás hoy?" },
+            { role: 'system', content: `You are a helpful AI tutor assisting blind and vision-impaired English speakers in learning ${selectedLanguage}. Your goal is to act as a ${selectedLanguage} tutor for the student. Start with an English sentence. Don't let conversations stray too far off topic (such as violent or inappropriate topics), and if they do politely redirect the user back on topic. Always enclose language switches within tags, such as <english> or <${selectedLanguage.toLowerCase()}>. For mixed responses, tag each sentence appropriately. Example:\n\n<english> Hello! How are you today? <${selectedLanguage.toLowerCase()}> ${getLangTemplate(selectedLanguage)}` },
             ...newHistory
           ],
           max_tokens: 100,
@@ -153,7 +166,7 @@ export default function AIChatScreen({ navigation }) {
       <SafeAreaView style={styles.container}>
         {/* Title Banner */}
         <View style={styles.topBanner}>
-          <TouchableOpacity onPress={() => exportMessageLog(messageLog)}>
+          <TouchableOpacity onPress={() => speak(shortMessage)}>
             <Text style={styles.titleText}>AI Chat</Text>
           </TouchableOpacity>
 
@@ -167,8 +180,8 @@ export default function AIChatScreen({ navigation }) {
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.topLeftBannerButton} onPress={handleNavigation}>
-            <Image source={require('../assets/back.png')} />
+          <TouchableOpacity style={styles.topLeftBannerButton} onPress={() => exportMessageLog(messageLog)}>
+            <Image source={require('../assets/save.png')} />
           </TouchableOpacity>
         </View>
 
@@ -207,7 +220,7 @@ export default function AIChatScreen({ navigation }) {
                   setLanguage("english");  // Set language
                 }}
               >
-                <Text style={styles.buttonText}>Eng.</Text>
+                <Text style={styles.buttonText}>En.</Text>
               </TouchableOpacity>
             )}
             
@@ -219,17 +232,17 @@ export default function AIChatScreen({ navigation }) {
                 style={styles.chatVoiceButton}
                 onPress={() => {
                   handleRecord();  // Start recording
-                  setLanguage("spanish");  // Set language
+                  setLanguage(selectedLanguage);  // Set language
                 }}
               >
-                <Text style={styles.buttonText}>Span.</Text>
+                <Text style={styles.buttonText}>{getLangShort(selectedLanguage)}</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
         {/* Return Button */}
-        <TouchableOpacity style={styles.bottomButton} onPress={() => navigate(navigation, "Home")}>
+        <TouchableOpacity style={styles.bottomButton} onPress={() => {sound(require("../assets/return.wav"), isSound); handleNavigation()}}>
           <Text style={styles.buttonText}>Return to Home</Text>
         </TouchableOpacity>
       </SafeAreaView>

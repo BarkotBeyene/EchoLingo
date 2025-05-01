@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import { Settings } from '../settings';
 import createStyles from '../styles.js';
-import { navigate, speak } from '../functions.js';
+import { navigate, speak, sound } from '../functions.js';
 import { FontAwesome5, MaterialIcons, Entypo } from '@expo/vector-icons';
 
 export default function LearnScreen({ navigation }) {
-  const { fontSize, isGreyscale, isAutoRead, selectedLanguage } = useContext(Settings);
+  const { fontSize, isGreyscale, isAutoRead, selectedLanguage, isSound } = useContext(Settings);
   const [materials, setMaterials] = useState([]);
   const { width } = useWindowDimensions();
 
@@ -28,6 +28,7 @@ export default function LearnScreen({ navigation }) {
   const styles = createStyles(numericFontSize, isGreyscale);
 
   const message = 'Now viewing: Learn. Explore reading materials, videos, grammar lessons, vocabulary and pronunciation, and notes. Tap on each item to begin learning. Press top left to go back. Press bottom banner to return home. Press top right to repeat this message.';
+  const shortMessage = "Learn";
 
   useEffect(() => {
     async function fetchMaterials() {
@@ -42,7 +43,7 @@ export default function LearnScreen({ navigation }) {
     }
 
     fetchMaterials();
-    if (isAutoRead) speak(message);
+    if (isAutoRead === "Long") {speak(message);} else if (isAutoRead === "Short") {speak(shortMessage);}
   }, [selectedLanguage]);
 
   const buttonWidth = width * 0.44;
@@ -61,7 +62,9 @@ export default function LearnScreen({ navigation }) {
           <Image source={require('../assets/back.png')} style={styles.icon} />
         </TouchableOpacity>
 
-        <Text style={styles.titleText}>Learn</Text>
+        <TouchableOpacity onPress={() => speak(shortMessage)}>
+          <Text style={styles.titleText}>Learn</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.topRightBannerButton}
@@ -119,7 +122,7 @@ export default function LearnScreen({ navigation }) {
       </ScrollView>
 
       {/* Bottom Button */}
-      <TouchableOpacity style={styles.bottomButton} onPress={() => navigate(navigation, 'Home')}>
+      <TouchableOpacity style={styles.bottomButton} onPress={() => {sound(require("../assets/return.wav"), isSound); navigate(navigation, "Home")}}>
         <Text style={styles.buttonText}>Return to Home</Text>
       </TouchableOpacity>
     </SafeAreaView>

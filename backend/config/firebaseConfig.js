@@ -1,9 +1,9 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { FIREBASE_API_KEY } from '@env'; // Ensure @env is correctly configured
+import { FIREBASE_API_KEY } from '@env'; 
+import { getStorage } from 'firebase/storage'; 
 // TODO: Add SDKs for Firebase products that you want to use
 
 console.log("API KEY:", FIREBASE_API_KEY); // Only during testing
@@ -22,5 +22,6 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app); 
 
-export { auth, db };
+export { auth, db, storage };

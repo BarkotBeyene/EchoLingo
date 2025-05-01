@@ -2,17 +2,18 @@ import { Text, View, Image, SafeAreaView, TouchableOpacity } from 'react-native'
 import { useState, useEffect, useContext } from 'react';
 import { Settings } from '../settings.js';
 import createStyles from '../styles.js';
-import { navigate, speak } from '../functions.js';
+import { navigate, speak, sound } from '../functions.js';
 import * as TTS from "expo-speech"; // TTS needs to be manually imported here so that TTS.stop() can be used
 import { recordStart, recordStop, getTranscription } from "../voice.js";
 
 export default function NavigateScreen({ navigation }) {
-  const { fontSize, isGreyscale, isAutoRead } = useContext(Settings);
+  const { fontSize, isGreyscale, isAutoRead, isSound } = useContext(Settings);
 
   createStyles(fontSize, isGreyscale);
 
   const message = "Now viewing: Navigate. Press bottom button to start and stop voice recording. Say... Help... For assistance. Press bottom banner to return home. Press top right banner to repeat this message.";
-  useEffect(() => { if (isAutoRead) {speak(message);} }, []); // useEffect ensures it doesn't play each time the buttons are re-rendered
+  const shortMessage = "Navigate";
+  useEffect(() => { if (isAutoRead === "Long") {speak(message);} else if (isAutoRead === "Short") {speak(shortMessage);} }, []); // useEffect ensures it doesn't play each time the buttons are re-rendered
 
   const [recording, setRecording] = useState(false); // Recording state hook
 
@@ -114,7 +115,9 @@ export default function NavigateScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       {/* Title Banner */}
       <View style={styles.topBanner}>
-        <Text style={styles.titleText}>Navigate</Text>
+        <TouchableOpacity onPress={() => speak(shortMessage)}>
+          <Text style={styles.titleText}>Navigate</Text>
+        </TouchableOpacity>
 
         {recording ? ( // If the user presses the TTS button during recording it will act as if they stopped the recording
           <TouchableOpacity style={styles.topRightBannerButton} onPress={navigateTranscribe}>
@@ -151,7 +154,7 @@ export default function NavigateScreen({ navigation }) {
       </View>
 
       {/* Return Button */}
-      <TouchableOpacity style={styles.bottomButton} onPress={handleNavigation}>
+      <TouchableOpacity style={styles.bottomButton} onPress={() => {sound(require("../assets/return.wav"), isSound); handleNavigation()}}>
         <Text style={styles.buttonText}>Return to Home</Text>
       </TouchableOpacity>
     </SafeAreaView>
