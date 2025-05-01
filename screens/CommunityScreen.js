@@ -1,9 +1,11 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useState } from 'react'; 
 import { Text, View, SafeAreaView, TouchableOpacity, Image } from 'react-native';
 import { Settings } from '../settings.js';
 import createStyles from '../styles.js';
 import { navigate, speak } from '../functions.js';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { db, auth } from '../backend/config/firebaseConfig'; 
+import { doc, getDoc } from 'firebase/firestore'; 
 
 export default function CommunityScreen({ navigation }) {
   const { fontSize, isGreyscale, isAutoRead } = useContext(Settings);
@@ -13,24 +15,45 @@ export default function CommunityScreen({ navigation }) {
   const message =
     'Now viewing: Community. Press Friends to manage connections, Notifications to view alerts, Profile to update or view your profile. Press bottom banner to return home. Press top right to repeat this message.';
 
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+        if (userDoc.exists()) {
+          setProfile(userDoc.data());
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err);
+      }
+    };
+    fetchProfile();
+  }, []); 
+
   useEffect(() => { if (isAutoRead === "Long") {speak(message);} else if (isAutoRead === "Short") {speak(shortMessage);} }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Title Banner */}
       <View style={styles.topBanner}>
         <TouchableOpacity onPress={() => speak(shortMessage)}>
           <Text style={styles.titleText}>Community</Text>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.topRightBannerButton} onPress={() => speak(message)}>
           <Image source={require('../assets/volume.png')} />
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.topLeftBannerButton} onPress={() => navigate(navigation, "Home")}>
           <Image source={require('../assets/back.png')} />
         </TouchableOpacity>
       </View>
+
+      {profile?.name && (
+        <View style={{ paddingHorizontal: 16, marginTop: 8 }}>
+          <Text style={[styles.buttonText, { color: '#000' }]}>
+            Welcome, {profile.name.split(' ')[0]}!
+          </Text>
+        </View>
+      )}
 
       {/* Three-option layout */}
       <View style={styles.buttonGrid}>

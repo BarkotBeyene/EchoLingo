@@ -16,6 +16,10 @@ let recordingPointer = null; // Holds active recording object.
 
 export const recordStart = async () => {
   try {
+    if (Platform.OS === 'web') {
+      console.warn('Voice recording is not available on web');
+      return false;
+    }
     await Audio.requestPermissionsAsync(); // Ask for audio permissions. Will simply be ignored if permission is already granted.
     await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true }); // Additional settings for IOS.
 
@@ -49,6 +53,10 @@ export const recordStop = async () => {
 
 export const getTranscription = async (uri, language = "english") => {
   try {
+    if (Platform.OS === 'web') {
+      console.warn('Voice transcription is not available on web');
+      return '';
+    }
     const supportedLanguages = {
       english: "en-US",  // English
       spanish: "es-ES",  // Spanish

@@ -1,3 +1,4 @@
+//ProfileScreen.js:
 import React, { useState, useEffect, useContext } from 'react';
 import {
   SafeAreaView,
@@ -12,17 +13,19 @@ import {
 import { Settings } from '../settings.js';
 import createStyles from '../styles.js';
 import { navigate, speak } from '../functions.js';
+import { db, auth } from '../backend/config/firebaseConfig';
+import { doc, getDoc, updateDoc, query, collection, where, getDocs } from 'firebase/firestore';
 
 export default function ProfileScreen({ navigation }) {
   const { fontSize, isGreyscale, isAutoRead } = useContext(Settings);
   const styles = createStyles(fontSize, isGreyscale);
 
-
   const [isEditingMode, setIsEditingMode] = useState(true);
+  const [username, setUsername] = useState('');
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [languageInput, setLanguageInput] = useState('');
-  const [languagesLearned, setLanguagesLearned] = useState([]);
+  const [languagesLearned, setLanguagesLearned] = useState(['Spanish']); // Default to Spanish
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [friends, setFriends] = useState([]);
@@ -35,6 +38,33 @@ export default function ProfileScreen({ navigation }) {
     if (isAutoRead) speak(message);
   }, [isEditingMode]);
 
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser?.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUsername(userData.username || '');
+          setName(userData.name || '');
+          setBio(userData.bio || '');
+          setLanguagesLearned(userData.languagesLearned?.length ? userData.languagesLearned : ['Spanish']);
+          setFriends(userData.friends || []);
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err);
+        setIsEditingMode(true); // Force editing mode on error
+      }
+    };
+
+    if (auth.currentUser) {
+      loadProfile();
+    }
+
+    return () => {
+      // Cleanup if needed
+    };
+  }, []);
+
   const handleAddLanguage = () => {
     const lang = languageInput.trim();
     if (lang && !languagesLearned.includes(lang)) {
@@ -43,58 +73,140 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  const handleSaveProfile = () => {
-    speak('Profile saved.');
-    //TODO: save to backend
-    setIsEditingMode(false);
+  const handleSaveProfile = async () => {
+    try {
+      if (username) {
+        // Check if username is taken by another user
+        const usernameQuery = query(
+          collection(db, 'users'), 
+          where('username', '==', username),
+          where('uid', '!=', auth.currentUser.uid)
+        );
+        const snapshot = await getDocs(usernameQuery);
+        if (!snapshot.empty) {
+          speak('Username already taken');
+          return;
+        }
+      }
+
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        username,
+        name,
+        bio,
+        languagesLearned,
+        friends,
+      });
+      speak('Profile saved.');
+      setIsEditingMode(false);
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      speak('Error saving profile');
+    }
   };
 
-  const handleSearch = () => {
-    const dummyUsers = [
-      { id: '1', name: 'Alice Johnson' },
-      { id: '2', name: 'Bob Smith' },
-      { id: '3', name: 'Charlie Lee' },
-    ];
-    const results = dummyUsers.filter(
-      (u) =>
-        u.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !friends.some((f) => f.id === u.id)
-    );
-    setSearchResults(results);
-    if (results.length === 0) speak('No users found.');
+  const handleSearch = async () => {
+    const trimmedQuery = searchQuery.trim();
+    if (!trimmedQuery) {
+      speak('Please enter a username to search');
+      return;
+    }
+
+    try {
+      // First try a simple query without the compound index
+      const usersQuery = query(
+        collection(db, 'users'), 
+        where('username', '==', trimmedQuery)
+      );
+      
+      const snapshot = await getDocs(usersQuery);
+      const results = snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        .filter(user => 
+          user.id !== auth.currentUser.uid && 
+          !friends.some(f => f.id === user.id)
+        );
+      
+      setSearchResults(results);
+      
+      if (results.length === 0) {
+        speak('No user found with that username');
+        // Show "no results" message in the UI
+        setSearchResults([{
+          id: 'no-results',
+          name: 'No user found',
+          isPlaceholder: true
+        }]);
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+      speak('Error searching users');
+      // Show error message in the UI
+      setSearchResults([{
+        id: 'error',
+        name: 'Error searching users',
+        isPlaceholder: true
+      }]);
+    }
   };
 
-  const handleAddFriend = (user) => {
-    setFriends([...friends, user]);
-    setSearchResults(searchResults.filter((u) => u.id !== user.id));
-    speak(`Friend request sent to ${user.name}.`);
+  const handleAddFriend = async (user) => {
+    try {
+      const updatedFriends = [...friends, user];
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        friends: updatedFriends
+      });
+      setFriends(updatedFriends);
+      setSearchResults(searchResults.filter((u) => u.id !== user.id));
+      speak(`Friend request sent to ${user.name}`);
+    } catch (err) {
+      console.error('Error adding friend:', err);
+      speak('Error adding friend');
+    }
   };
 
-  const handleRemoveFriend = (id) => {
-    setFriends(friends.filter((f) => f.id !== id));
-    speak('Friend removed.');
+  const handleRemoveFriend = async (id) => {
+    try {
+      const updatedFriends = friends.filter((f) => f.id !== id);
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        friends: updatedFriends
+      });
+      setFriends(updatedFriends);
+      speak('Friend removed.');
+    } catch (err) {
+      console.error('Error removing friend:', err);
+      speak('Error removing friend');
+    }
   };
 
  
   if (!isEditingMode) {
     return (
-      <SafeAreaView style={styles.container}>
-        {/* Title Banner */}
-              <View style={styles.topBanner}>
-                <TouchableOpacity onPress={() => speak(shortMessage)}>
-                  <Text style={styles.titleText}>Community</Text>
-                </TouchableOpacity>
-        
-                <TouchableOpacity style={styles.topRightBannerButton} onPress={() => speak(message)}>
-                  <Image source={require('../assets/volume.png')} />
-                </TouchableOpacity>
-        
-                <TouchableOpacity style={styles.topLeftBannerButton} onPress={() => setIsEditingMode(true)}>
-                  <Image source={require('../assets/gear.png')} />
-                </TouchableOpacity>
-              </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.topBanner}>
+          <TouchableOpacity onPress={() => speak(shortMessage)}>
+            <Text style={styles.titleText}>Community</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.topRightBannerButton} onPress={() => speak(message)}>
+            <Image source={require('../assets/volume.png')} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.topLeftBannerButton} onPress={() => setIsEditingMode(true)}>
+            <Image source={require('../assets/gear.png')} />
+          </TouchableOpacity>
+        </View>
 
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={profileStyles.section}>
+            <Text style={styles.titleText}>Username</Text>
+            <Text style={[styles.buttonText, { color: '#000' }]}>{username}</Text>
+          </View>
+
           <View style={profileStyles.section}>
             <Text style={styles.titleText}>Name</Text>
             <Text style={[styles.buttonText, { color: '#000' }]}>{name}</Text>
@@ -138,7 +250,7 @@ export default function ProfileScreen({ navigation }) {
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <View style={styles.topBanner}>
         <TouchableOpacity
           style={styles.topLeftBannerButton}
@@ -155,9 +267,20 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={profileStyles.section}>
           <Text style={styles.titleText}>Your Profile</Text>
+          <TextInput
+            style={profileStyles.input}
+            placeholder="Username"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+          />
           <TextInput
             style={profileStyles.input}
             placeholder="Name"
@@ -203,13 +326,14 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
         <View style={profileStyles.section}>
-          <Text style={styles.titleText}>Search Learners</Text>
+          <Text style={styles.titleText}>Search Users</Text>
           <View style={profileStyles.languageRow}>
             <TextInput
               style={[profileStyles.input, { flex: 1 }]}
-              placeholder="Search by name"
+              placeholder="Search by username"
               value={searchQuery}
               onChangeText={setSearchQuery}
+              autoCapitalize="none"
             />
             <TouchableOpacity
               style={profileStyles.addButtonSmall}
@@ -220,13 +344,19 @@ export default function ProfileScreen({ navigation }) {
           </View>
           {searchResults.map((user) => (
             <View key={user.id} style={profileStyles.card}>
-              <Text style={styles.titleText}>{user.name}</Text>
-              <TouchableOpacity
-                style={profileStyles.actionButton}
-                onPress={() => handleAddFriend(user)}
-              >
-                <Text style={{ color: '#007AFF', fontWeight: '600' }}>Add Friend</Text>
-              </TouchableOpacity>
+              <Text style={styles.titleText}>
+                {user.username || user.name}
+              </Text>
+              {!user.isPlaceholder && (
+                <TouchableOpacity
+                  style={profileStyles.actionButton}
+                  onPress={() => handleAddFriend(user)}
+                >
+                  <Text style={{ color: '#007AFF', fontWeight: '600' }}>
+                    Add Friend
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           ))}
         </View>
@@ -262,11 +392,24 @@ export default function ProfileScreen({ navigation }) {
 }
 
 const profileStyles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: '5%',
+    paddingBottom: 20,
+  },
   section: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: '3%',
+    width: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -315,22 +458,20 @@ const profileStyles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 8,
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginVertical: 4,
   },
   actionButton: {
     backgroundColor: '#e6f0ff',
     padding: 8,
     borderRadius: 8,
   },
-});
+}
+);
