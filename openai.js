@@ -58,7 +58,7 @@ export async function sendMessageToAI(prompt) {
       return "Invalid API key format. API key should start with 'sk-'";
     }
   } catch (error) {
-    console.error("sendMessageToAI error:", error.message || error);
+    console.error("sendMessageToAI error: ", error.message || error);
     return "Sorry, your AI request could not be completed. Please try again.";
   }
 }
