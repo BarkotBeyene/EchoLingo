@@ -21,6 +21,9 @@ import TextMaterialsScreen from './screens/TextMaterialsScreen';
 import VideoMaterialsScreen from './screens/VideoMaterialsScreen';
 import GrammarScreen from './screens/GrammarScreen';
 import VocabPronunciationScreen from './screens/VocabPronunciationScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import FriendsScreen from './screens/FriendsScreen';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -44,6 +47,8 @@ export default function App() {
           <Stack.Screen name="Audio Settings" component={AudioSettingsScreen} />
           <Stack.Screen name="Navigate" component={NavigateScreen} />
           <Stack.Screen name="VideoMaterials" component={VideoMaterialsScreen} />
+          <Stack.Screen name="Friends" component={FriendsScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="Grammar" component={GrammarScreen} options={{ headerShown: false }} />
           <Stack.Screen name="VocabPronunciation" component={VocabPronunciationScreen} options={{ headerShown: false }} />
         </Stack.Navigator>

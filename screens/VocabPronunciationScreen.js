@@ -9,6 +9,23 @@ import { navigate, speak } from '../functions';
 import { recordStart, recordStop, getTranscription } from '../voice';
 import { sendMessageToAI } from '../openai';
 
+const commonGreetings = {
+  Spanish: [
+    { word: "Hola", translation: "Hello", definition: "A common greeting", example: "¡Hola! ¿Cómo estás?", pronunciation: "OH-lah" },
+    { word: "Buenos días", translation: "Good morning", definition: "Morning greeting", example: "¡Buenos días! ¿Qué tal?", pronunciation: "BWEH-nohs DEE-ahs" },
+    { word: "Gracias", translation: "Thank you", definition: "Expression of gratitude", example: "¡Gracias por tu ayuda!", pronunciation: "GRAH-see-ahs" },
+    { word: "Por favor", translation: "Please", definition: "Polite request", example: "Por favor, pasa.", pronunciation: "pohr fah-VOHR" },
+    { word: "Adiós", translation: "Goodbye", definition: "Farewell greeting", example: "¡Adiós, hasta luego!", pronunciation: "ah-dee-OHS" }
+  ],
+  French: [
+    { word: "Bonjour", translation: "Hello/Good day", definition: "Common daytime greeting", example: "Bonjour, comment allez-vous?", pronunciation: "bohn-ZHOOR" },
+    { word: "Merci", translation: "Thank you", definition: "Expression of gratitude", example: "Merci beaucoup!", pronunciation: "mehr-SEE" },
+    { word: "S'il vous plaît", translation: "Please", definition: "Polite request", example: "S'il vous plaît, entrez.", pronunciation: "seel voo PLEH" },
+    { word: "Au revoir", translation: "Goodbye", definition: "Farewell greeting", example: "Au revoir, à bientôt!", pronunciation: "oh ruh-VWAHR" },
+    { word: "Bonsoir", translation: "Good evening", definition: "Evening greeting", example: "Bonsoir, comment va?", pronunciation: "bohn-SWAHR" }
+  ]
+};
+
 export default function VocabPronunciationScreen({ navigation }) {
   const { fontSize, isGreyscale, isAutoRead, selectedLanguage } = useContext(Settings);
   const [word, setWord] = useState('');
@@ -24,8 +41,13 @@ export default function VocabPronunciationScreen({ navigation }) {
   const message = 'Now viewing: Vocabulary and Pronunciation. Search for a word to learn its translation, example sentence, and hear its pronunciation.';
 
   useEffect(() => {
-    if (isAutoRead) speak(message);
-  }, []);
+    if (isAutoRead) {
+      // Add a small delay to ensure proper initialization
+      setTimeout(() => {
+        speak(message);
+      }, 100);
+    }
+  }, [isAutoRead, message]);
 
   const handleSearch = async (input = word) => {
     if (!input || typeof input !== 'string') {
@@ -151,6 +173,50 @@ export default function VocabPronunciationScreen({ navigation }) {
             <Text style={styles.buttonText}>Search</Text>
           </TouchableOpacity>
 
+          {!result && (
+            <View style={styles.commonWordsContainer}>
+              <Text style={[styles.sectionTitle, { fontSize: numericFontSize + 2, marginBottom: 12, color: 'black' }]}>
+                Common Greetings in {selectedLanguage}
+              </Text>
+              <ScrollView 
+                horizontal={false}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.wordsContainer}
+              >
+                {commonGreetings[selectedLanguage]?.map((item, index) => (
+                  <TouchableOpacity 
+                    key={index}
+                    style={styles.wordCard}
+                    onPress={() => {
+                      setWord(item.word);
+                      setResult(item);
+                    }}
+                  >
+                    <View style={styles.wordHeader}>
+                      <Text style={[styles.wordText, { fontSize: numericFontSize + 4, color: 'black' }]}>
+                        {item.word}
+                      </Text>
+                      <TouchableOpacity 
+                        onPress={() => speak(item.word)}
+                        style={styles.speakButton}
+                      >
+                        <Image source={require('../assets/volume.png')} style={styles.smallIcon} />
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.wordDetails}>
+                      <Text style={[styles.translationText, { fontSize: numericFontSize - 2, color: 'gray' }]}>
+                        <Text style={{ fontWeight: 'bold' }}>Translation:</Text> {item.translation}
+                      </Text>
+                      <Text style={[styles.translationText, { fontSize: numericFontSize - 2, color: 'gray' }]}>
+                        <Text style={{ fontWeight: 'bold' }}>Definition:</Text> {item.definition}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           {result && (
             <View style={{ alignItems: 'center', paddingHorizontal: 10 }}>
               <Text style={[styles.buttonText, { fontSize: numericFontSize + 2, marginBottom: 6, color: 'black' }]}>{result.word}</Text>
@@ -180,3 +246,59 @@ export default function VocabPronunciationScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
+// Add these to your existing styles
+const additionalStyles = {
+  commonWordsContainer: {
+    flex: 1,
+    marginTop: 10,
+    paddingHorizontal: 5,
+  },
+  wordsContainer: {
+    paddingHorizontal: 5,
+  },
+  sectionTitle: {
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  wordCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    marginVertical: 6,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  wordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    paddingBottom: 8,
+  },
+  wordDetails: {
+    paddingTop: 4,
+  },
+  wordText: {
+    fontWeight: '700',
+  },
+  translationText: {
+    marginVertical: 2,
+  },
+  speakButton: {
+    padding: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+  },
+  smallIcon: {
+    width: 20,
+    height: 20,
+  },
+};

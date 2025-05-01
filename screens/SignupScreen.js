@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import { auth, db } from '../backend/config/firebaseConfig';
 import createStyles from '../styles.js';
@@ -55,6 +55,7 @@ export default function SignupScreen({ navigation }) {
     }
 
     try {
+      // Check username availability
       const usernameQuery = query(collection(db, 'users'), where('username', '==', username));
       const snapshot = await getDocs(usernameQuery);
       if (!snapshot.empty) {
@@ -63,35 +64,30 @@ export default function SignupScreen({ navigation }) {
         return;
       }
 
+      // Create auth user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Wait for the user's token/session to fully sync (esp. on Android)
-      await new Promise((resolve) => {
-        const unsubscribe = onAuthStateChanged(auth, (authedUser) => {
-          if (authedUser && authedUser.uid === user.uid) {
-            unsubscribe(); // stop listening
-            resolve();
-          }
-        });
-      });
-
-      console.log("Auth session ready. Proceeding to Firestore...");
-
+      // Create user document in Firestore
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         email,
+        username,
         name: `${firstName} ${lastName}`,
+        created_at: new Date().toISOString(),
+        // Optional fields with default/empty values
+        bio: '',
         role: 'student',
         preferred_language: 'Spanish',
+        languagesLearned: ['Spanish'],
         profile_pic: '',
-        username,
-        created_at: new Date().toISOString()
+        friends: []
       });
 
       speak('Sign up successful. You can now log in.');
       alert('Sign up successful! You can now log in.');
 
+      // Reset form
       setFirstName('');
       setLastName('');
       setUsername('');
@@ -99,11 +95,12 @@ export default function SignupScreen({ navigation }) {
       setPassword('');
       setError('');
 
+      // Navigate to login
       navigation.navigate('Login');
     } catch (error) {
       console.error('Signup Error:', error);
       setError(error.message);
-      speak(error.message);
+      speak('Error during sign up. Please try again.');
     }
   };
 
