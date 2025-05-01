@@ -3,19 +3,19 @@ import {
   SafeAreaView,
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   Image,
   StyleSheet,
   Platform,
-  ScrollView
+  ScrollView,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Settings } from '../settings.js';
 import createStyles from '../styles.js';
 import { navigate, speak } from '../functions.js';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { db, auth } from '../backend/config/firebaseConfig';
-import { collection, getDoc, doc, updateDoc } from 'firebase/firestore';
+import { getDoc, doc, updateDoc } from 'firebase/firestore';
 
 export default function FriendsScreen({ navigation }) {
   const { fontSize, isGreyscale, isAutoRead } = useContext(Settings);
@@ -78,7 +78,7 @@ export default function FriendsScreen({ navigation }) {
         </Text>
       </View>
       <TouchableOpacity
-        style={[profileStyles.actionButton, { backgroundColor: '#ffe6e6' }]} 
+        style={[profileStyles.actionButton, { backgroundColor: '#ffe6e6' }]}
         onPress={() => handleRemoveFriend(item.id)}
       >
         <Text style={profileStyles.removeText}>Remove</Text>
@@ -87,7 +87,7 @@ export default function FriendsScreen({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={profileStyles.safeArea}>
       <View style={styles.topBanner}>
         <TouchableOpacity onPress={() => speak(shortMessage)}>
           <Text style={styles.titleText}>Friends</Text>
@@ -97,66 +97,76 @@ export default function FriendsScreen({ navigation }) {
           <Image source={require('../assets/volume.png')} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.topLeftBannerButton} onPress={() => navigate(navigation, "Community")}> 
+        <TouchableOpacity style={styles.topLeftBannerButton} onPress={() => navigate(navigation, "Community")}>
           <Image source={require('../assets/back.png')} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        style={profileStyles.scrollView}
-        contentContainerStyle={profileStyles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
       >
-        <View style={profileStyles.section}>
-          {friends.length > 0 ? (
-            friends.map((friend) => renderFriend({ item: friend }))
-          ) : (
-            <Text style={profileStyles.emptyText}>No friends yet.</Text>
-          )}
-        </View>
-      </ScrollView>
+        <ScrollView
+          style={profileStyles.scrollView}
+          contentContainerStyle={profileStyles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={profileStyles.section}>
+            {friends.length > 0 ? (
+              friends.map((friend) => renderFriend({ item: friend }))
+            ) : (
+              <Text style={profileStyles.emptyText}>No friends yet.</Text>
+            )}
+          </View>
+        </ScrollView>
 
-      <TouchableOpacity
-        style={[styles.bottomButton, profileStyles.bottomButton]}
-        onPress={() => navigate(navigation, 'Home')}
-      >
-        <Text style={styles.buttonText}>Return to Home</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.bottomButton, profileStyles.bottomButton]}
+          onPress={() => navigate(navigation, 'Home')}
+        >
+          <Text style={styles.buttonText}>Return to Home</Text>
+        </TouchableOpacity>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const profileStyles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: Platform.select({ web: '10%', default: '4%' }),
-    paddingBottom: Platform.select({ web: 100, default: 80 }),
+    paddingHorizontal: '5%',
+    paddingBottom: 20,
   },
   section: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: Platform.select({ web: 20, default: 16 }),
-    marginVertical: 8,
+    padding: 16,
+    marginBottom: '3%',
+    width: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  sectionTitle: {
-    marginBottom: Platform.select({ web: 16, default: 12 }),
-  },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: Platform.select({ web: 16, default: 12 }),
-    marginTop: 8,
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginVertical: 4,
   },
   friendInfo: {
     flex: 1,
@@ -191,6 +201,7 @@ const profileStyles = StyleSheet.create({
     fontSize: Platform.select({ web: 16, default: 14 }),
   },
   bottomButton: {
-    marginBottom: Platform.select({ web: 20, default: 16 }),
+    marginBottom: Platform.select({ ios: 20, android: 16, default: 20 }),
+    alignSelf: 'center',
   }
 });

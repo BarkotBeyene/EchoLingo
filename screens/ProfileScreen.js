@@ -1,3 +1,4 @@
+//ProfileScreen.js:
 import React, { useState, useEffect, useContext } from 'react';
 import {
   SafeAreaView,
@@ -159,7 +160,7 @@ export default function ProfileScreen({ navigation }) {
       });
       setFriends(updatedFriends);
       setSearchResults(searchResults.filter((u) => u.id !== user.id));
-      speak(`Friend request sent to ${user.name}.`);
+      speak(Friend request sent to ${user.name}.);
     } catch (err) {
       console.error('Error adding friend:', err);
       speak('Error adding friend');
