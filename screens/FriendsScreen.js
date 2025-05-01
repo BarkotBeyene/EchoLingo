@@ -6,7 +6,9 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  StyleSheet
+  StyleSheet,
+  Platform,
+  ScrollView
 } from 'react-native';
 import { Settings } from '../settings.js';
 import createStyles from '../styles.js';
@@ -67,28 +69,25 @@ export default function FriendsScreen({ navigation }) {
   };
 
   const renderFriend = ({ item }) => (
-    <View style={profileStyles.section}>
-      <View style={profileStyles.card}>
-        <View style={profileStyles.friendInfo}>
-          <Text style={[styles.titleText, { fontSize: 20 }]}>{item.name}</Text>
-          <Text style={profileStyles.username}>@{item.username}</Text>
-          <Text style={profileStyles.languages}>
-            Learning: {item.languagesLearned?.join(', ') || 'No languages added'}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={[profileStyles.actionButton, { backgroundColor: '#ffe6e6' }]} 
-          onPress={() => handleRemoveFriend(item.id)}
-        >
-          <Text style={{ color: '#FF3B30', fontWeight: '600' }}>Remove</Text>
-        </TouchableOpacity>
+    <View style={profileStyles.card}>
+      <View style={profileStyles.friendInfo}>
+        <Text style={[styles.titleText, profileStyles.name]}>{item.name}</Text>
+        <Text style={profileStyles.username}>@{item.username}</Text>
+        <Text style={profileStyles.languages}>
+          Learning: {item.languagesLearned?.join(', ') || 'No languages added'}
+        </Text>
       </View>
+      <TouchableOpacity
+        style={[profileStyles.actionButton, { backgroundColor: '#ffe6e6' }]} 
+        onPress={() => handleRemoveFriend(item.id)}
+      >
+        <Text style={profileStyles.removeText}>Remove</Text>
+      </TouchableOpacity>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Title Banner */}
       <View style={styles.topBanner}>
         <TouchableOpacity onPress={() => speak(shortMessage)}>
           <Text style={styles.titleText}>Friends</Text>
@@ -98,21 +97,27 @@ export default function FriendsScreen({ navigation }) {
           <Image source={require('../assets/volume.png')} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.topLeftBannerButton} onPress={() => navigate(navigation, "Home")}> 
+        <TouchableOpacity style={styles.topLeftBannerButton} onPress={() => navigate(navigation, "Community")}> 
           <Image source={require('../assets/back.png')} />
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={friends}
-        keyExtractor={f => f.id || f.uid}
-        renderItem={renderFriend}
-        contentContainerStyle={profileStyles.listContainer}
+      <ScrollView 
+        style={profileStyles.scrollView}
+        contentContainerStyle={profileStyles.scrollContent}
         showsVerticalScrollIndicator={false}
-      />
+      >
+        <View style={profileStyles.section}>
+          {friends.length > 0 ? (
+            friends.map((friend) => renderFriend({ item: friend }))
+          ) : (
+            <Text style={profileStyles.emptyText}>No friends yet.</Text>
+          )}
+        </View>
+      </ScrollView>
 
       <TouchableOpacity
-        style={styles.bottomButton}
+        style={[styles.bottomButton, profileStyles.bottomButton]}
         onPress={() => navigate(navigation, 'Home')}
       >
         <Text style={styles.buttonText}>Return to Home</Text>
@@ -122,11 +127,18 @@ export default function FriendsScreen({ navigation }) {
 }
 
 const profileStyles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: Platform.select({ web: '10%', default: '4%' }),
+    paddingBottom: Platform.select({ web: 100, default: 80 }),
+  },
   section: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 16,
+    padding: Platform.select({ web: 20, default: 16 }),
     marginVertical: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -134,31 +146,51 @@ const profileStyles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  sectionTitle: {
+    marginBottom: Platform.select({ web: 16, default: 12 }),
+  },
   card: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: Platform.select({ web: 16, default: 12 }),
+    marginTop: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   friendInfo: {
     flex: 1,
+    marginRight: 12,
+  },
+  name: {
+    fontSize: Platform.select({ web: 20, default: 16 }),
+    marginBottom: 2,
   },
   username: {
-    fontSize: 14,
+    fontSize: Platform.select({ web: 16, default: 14 }),
     color: '#666',
-    marginTop: 2,
+    marginBottom: 4,
   },
   languages: {
-    fontSize: 14,
+    fontSize: Platform.select({ web: 14, default: 12 }),
     color: '#444',
-    marginTop: 4,
   },
   actionButton: {
-    backgroundColor: '#e6f0ff',
-    padding: 8,
+    backgroundColor: '#ffe6e6',
+    padding: Platform.select({ web: 10, default: 8 }),
     borderRadius: 8,
-    marginLeft: 12,
   },
-  listContainer: {
-    paddingVertical: 12,
+  removeText: {
+    color: '#FF3B30',
+    fontSize: Platform.select({ web: 16, default: 14 }),
+    fontWeight: '600',
+  },
+  emptyText: {
+    color: '#555',
+    marginTop: 8,
+    fontSize: Platform.select({ web: 16, default: 14 }),
+  },
+  bottomButton: {
+    marginBottom: Platform.select({ web: 20, default: 16 }),
   }
 });
